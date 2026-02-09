@@ -35,6 +35,8 @@ class KeywordDetector:
         if self.recognizer.AcceptWaveform(data):
             r = json.loads(self.recognizer.Result())
             text = r.get("text", "").lower()
+            if text:
+                print(f"\rRecognized: '{text}'" + " "*30, flush=True)
             return self.check_keywords(text)
         else:
             partial = json.loads(self.recognizer.PartialResult()).get("partial", "").lower()

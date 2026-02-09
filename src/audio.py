@@ -4,9 +4,10 @@ import queue
 
 
 class AudioInput:
-    def __init__(self, samplerate=16000, channels=1):
+    def __init__(self, samplerate=16000, channels=1, blocksize=8000):
         self.samplerate = samplerate
         self.channels = channels
+        self.blocksize = blocksize
         self.q = queue.Queue()
 
     def callback(self, indata, frames, time, status):
@@ -15,9 +16,20 @@ class AudioInput:
         self.q.put(indata.copy())
 
     def start(self):
-        with sd.InputStream(samplerate=self.samplerate, channels=self.channels, callback=self.callback):
+        stream = sd.InputStream(
+            samplerate=self.samplerate, 
+            channels=self.channels,
+            blocksize=self.blocksize,
+            dtype='int16',
+            callback=self.callback
+        )
+        stream.start()
+        try:
             while True:
                 yield self.q.get()
+        finally:
+            stream.stop()
+            stream.close()
 
 
 class AudioHandler:
